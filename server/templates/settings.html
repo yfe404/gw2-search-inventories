@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>jQuery UI Autocomplete - Remote with caching</title>
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="static/main.css">
+  
+  <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/object-hash@1.3.1/dist/object_hash.min.js"></script>
+
+</head>
+<body>
+
+  
+<table id="apiKeys">
+  <tbody>
+    <tr>
+      <td>API KEYS</td>
+      <td>NAME</td>
+    </tr>
+    <tr>
+      <td><input type="text"/ id="_apikey"></td>
+      <td><input type="text"/ id="_name"></td>
+      <td><input type="button" value="Add" onclick="add()"/></td>
+    </tr>
+  </tbody>
+</table>​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
+
+<input type="button" onclick="refresh()" value="refresh" />
+<a href="/">back</a>
+
+<div class="modal"><!-- Place at bottom of page --></div>
+</body>
+
+<script>
+
+  if (!localStorage.getItem("apikeys")){
+      localStorage.setItem('apikeys', JSON.stringify({apikeys: []}));
+  } else {
+      apikeys = JSON.parse(localStorage.getItem('apikeys')).apikeys 
+      for( var i = 0; i < apikeys.length; i++) {
+	  var deleteId = objectHash.MD5(apikeys[i])
+	  
+	  var markup = "<tr><td>" + apikeys[i].key + "</td><td>" + apikeys[i].name + "</td><td>" + '<td><input id=' + deleteId + ' type="button" value="Delete" onclick="deleteRow(this)"/></td>';
+	  $("table tbody").append(markup);
+      }
+  }
+
+  console.log(localStorage.getItem("apikeys"))
+
+
+  function refresh(){
+      $('body').toggleClass('loading');
+      $.ajax({
+	  type: "POST",
+	  url: "/refresh",
+	  data: localStorage.getItem("apikeys"),
+	  success: function () {$('body').toggleClass('loading')},
+	  error: function () {$('body').toggleClass('loading')},
+	  contentType : 'application/json'
+      });
+  }
+  
+  function add() {
+      var apiKey = $("#_apikey").val().trim();
+      var name = $("#_name").val().trim();
+      var _apiKey = {key: apiKey, name: name}
+      var deleteId = objectHash.MD5(_apiKey)
+      
+      var markup = "<tr><td>" + apiKey + "</td><td>" + name + "</td><td>" + '<td><input id=' + deleteId + ' type="button" value="Delete" onclick="deleteRow(this)"/></td>';
+
+      $("table tbody").append(markup);
+      var apiKeys = JSON.parse(localStorage.getItem('apikeys'));
+
+
+      apiKeys.apikeys.push(_apiKey)
+      localStorage.setItem('apikeys', JSON.stringify(apiKeys));
+  }
+  
+  
+  function deleteRow(btn) {
+      console.log(btn)
+      var row = btn.parentNode.parentNode;
+      var deleteId = btn.id;
+      console.log(deleteId);
+      
+      row.parentNode.removeChild(row);
+      var apikeys = JSON.parse(localStorage.getItem('apikeys')).apikeys
+      
+      for( var i = 0; i < apikeys.length; i++) {
+	  var _hash = objectHash.MD5(apikeys[i]);
+	  if (_hash === deleteId) {
+	      apikeys.splice(i, 1);
+	      localStorage.setItem('apikeys', JSON.stringify({apikeys: apikeys}));
+	      break;
+	  }
+      };
+  }
+    
+  </script>
+
+
+</html>
