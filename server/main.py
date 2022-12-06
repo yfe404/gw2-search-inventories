@@ -158,7 +158,7 @@ async def search(request: SearchRequest):
                     }
                 )
         
-        account_details["inventories"]["qty"] = total_all_char
+            account_details["inventories"]["qty"] = total_all_char
         accounts.append(account_details)
         
     response = {
